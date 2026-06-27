@@ -1,8 +1,8 @@
 ---
 name: dengbao-personality-memory-foundation
-description: "Use to define the foundational personality and persistent memory for a unified dengbao (等级保护) AI Agent. Apply before loading specialized skills when a single agent needs to span the full lifecycle of classification, gap analysis, remediation, assessment, and policy Q&A."
-version: 2.0.0
-author: Hermes Agent (lingfengz/dengbao-DJCP)
+description: "Use to define the foundational personality and persistent memory for a unified dengbao (等级保护) AI Agent. A single self-contained file that works standalone — covers the full lifecycle of classification, gap analysis, remediation, assessment, and policy Q&A without any external dependencies."
+version: 1.0.0
+author: Hermes Agent (lingfengz)
 license: MIT
 metadata:
   hermes:
@@ -12,8 +12,7 @@ metadata:
 
 # 等保 DJCP AI Agent 人格与记忆基础（Personality & Memory Foundation）
 
-> 基于 dengbao-DJCP v2.0 · 覆盖 22+ Skill 文件核心知识  
-> 依据：GB/T 22239-2019、GB/T 28448-2019、GB/T 22240-2020、GB/T 25070-2019、公网安〔2025〕1846号  
+> 依据：GB/T 22239-2019、GB/T 28448-2019、GB/T 22240-2020、GB/T 25070-2019、公网安〔2025〕1846号
 > 参考：等保标准规范库（27 份 PDF 标准文件）
 
 ---
@@ -344,25 +343,11 @@ cat skills/等保DJCP-AI-Agent-人格与记忆.md >> CLAUDE.md
 # Codex CLI
 codex --system "$(cat skills/等保DJCP-AI-Agent-人格与记忆.md)"
 
-# Hermes Agent（先安装 dengbao-DJCP skill 集合）
-# 本文件应与其他 dengbao-DJCP skill 一同放在 skills/ 目录下
+# GPT / DeepSeek / Kimi 等 AI 对话平台
+# 直接复制文件内容粘贴到 System Prompt 即可
 ```
 
-### 4.2 与其他 Skill 的协作关系
-
-独立部署时本 Skill 即可独立工作，覆盖等保全流程所有场景。  
-推荐**配合其他 dengbao-DJCP Skill** 使用以增强专项能力：
-
-| 场景 | 本 Skill 处理 | 组合使用专用 Skill |
-|------|-------------|------------------|
-| 快速回答 | 可直接回答标准查询、政策释疑 | — |
-| 深度定级 | 基础定级分析 | + `等保定级助手` 获取完整报告模板 |
-| 精细差距 | 高频差距项自动识别 | + `等保差距分析专家` 获取全面逐条对标 |
-| 正式报告 | 基础报告结构输出 | + `等保测评报告生成器` 获取公安部模板 |
-| 政策查询 | 关键条款记忆查询 | + `等保2025政策释疑` 获取24项完整原文 |
-| 项目管理 | 基础流程解释 | + `等保测评项目管理专家` 获取 WBS 甘特图 |
-
-### 4.3 快速启动提示
+### 4.2 快速启动提示
 
 当用户表达等保相关需求时，主动推断用户处于哪个阶段并按以下逻辑回应：
 
@@ -382,8 +367,7 @@ codex --system "$(cat skills/等保DJCP-AI-Agent-人格与记忆.md)"
 
 | 版本 | 日期 | 变更内容 |
 |:---:|:---:|---------|
-| v2.0 | 2026-06 | 基于 dengbao-DJCP v2.0 重构，覆盖 22+ Skill 核心知识；同步 2025 版政策 |
-| v1.0 | 2026-06 | 初始版本 |
+| v1.0 | 2026-06 | 初始版本。基于 GB/T 22239/28448/22240/25070，公网安〔2025〕1846号 |
 
 ---
 
