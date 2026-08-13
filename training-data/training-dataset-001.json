@@ -1,0 +1,209 @@
+{
+  "training_data_version": "1.0.0",
+  "dataset_id": "djcp-case-001-2025",
+  "description": "xx系统 第三级等保测评训练数据集 — 用于训练AI Agent进行附录D测评数据分析、交叉验证、问题提取和整改优先级排序",
+  "metadata": {
+    "system_name": "xx平台",
+    "security_level": "第三级 (S3A3)",
+    "assessment_year": 2025,
+    "previous_score": 71.74,
+    "assessment_conclusion": "基本符合",
+    "asset_count": 27,
+    "previous_issues_count": 42,
+    "fixed_issues": 6,
+    "unfixed_issues": 36,
+    "is_cloud_tenant": true
+  },
+
+  "training_examples": {
+    "cross_verification": {
+      "description": "交叉验证 — 训练模型将附录A/B/C/D四层数据进行一致性检查",
+      "example_1": {
+        "type": "A_vs_D_asset",
+        "input": "附录A资产清单：服务器×4(应用服务器_41/_42/_43/_44)、终端×4(运维×2+业务×2)、中间件×3(Nginx)、数据库×2(MySQL)、应用系统×6、数据资源×25(共9类)",
+        "expected_output": "附录D测评对象应全量覆盖，无遗漏无多余。本案例确认：✅ 完全一致。",
+        "verification_method": "逐条对照A表4-8的行数与D中的对象名称"
+      },
+      "example_2": {
+        "type": "B_vs_D_issue_tracking",
+        "input": "附录B：42项问题全部标记为'未整改→计划整改中'。附录D中逐项核查后，仅6项已修复(14.3%)，36项未修复(85.7%)",
+        "expected_output": "整改执行率为零。应输出：① 已修复项清单；② 未修复项按安全类分组；③ 关键建议：执行力>技术方案",
+        "verification_method": "逐行比对B的42项问题标题与D的测评项，检查同一问题的判定结果是否变化"
+      },
+      "example_3": {
+        "type": "C_vs_D_count",
+        "input": "C表显示'安全区域边界-边界防护 符合1/不适用3=4'。D表逐项：a符合, b不适用, c不适用, d不适用",
+        "expected_output": "✅ 一致。符合1(项a) + 不适用3(项b/c/d) = 4项，与C计数吻合",
+        "verification_method": "取每个控制点的D表逐项判定，按[符合,部分符合,不符合,不适用]分类计数，与C表对比"
+      }
+    },
+
+    "judgment_logic": {
+      "description": "测评项判定逻辑 — 训练模型正确判定测评项",
+      "common_mistakes": [
+        {
+          "item": "边界防护c（非授权外联检查）",
+          "typical_wrong_judgment": "不符合",
+          "correct_judgment": "不适用",
+          "reason": "云平台侧控制，租户无管理权限。这里不是'租户没做'，而是'租户管不了'"
+        },
+        {
+          "item": "入侵防范c（网络行为分析）",
+          "typical_wrong_judgment": "不符合",
+          "correct_judgment": "符合",
+          "reason": "云平台提供了态势感知+抗APT攻击系统（规则库最新），能够分析新型网络攻击"
+        },
+        {
+          "item": "服务器身份鉴别a（唯一+复杂度）",
+          "typical_wrong_judgment": "不符合",
+          "correct_judgment": "部分符合",
+          "reason": "口令标识唯一✅，但未配置复杂度策略❌，口令有效期99999天❌。既有满足的部分也有不满足的部分"
+        },
+        {
+          "item": "应用系统身份鉴别a（唯一+复杂度）",
+          "typical_wrong_judgment": "不符合",
+          "correct_judgment": "部分符合",
+          "reason": "账户唯一✅，但口令为6位字母数字组合（长度不够、无特殊字符❌），未开启多因素❌"
+        },
+        {
+          "item": "数据库数据保密性b（存储加密）",
+          "typical_wrong_judgment": "符合",
+          "correct_judgment": "不符合（非国密）",
+          "reason": "使用了SHA-1双重加密，但密码技术产品应当通过国家密码管理局审批。虽然'有加密'但不是'合规加密'"
+        }
+      ]
+    },
+
+    "risk_identification": {
+      "description": "从测评结果中自动识别系统性风险",
+      "examples": [
+        {
+          "id": "P0-1",
+          "risk_pattern": "多个安全层面、多个对象的同一控制点全部不符合",
+          "trigger": "身份鉴别d（双因素）在服务器×4 + 数据库×2 + 终端×4 + 应用系统×6 = 全部不符合",
+          "risk_level": "P0",
+          "identified_risk": "**用户登录无多因素认证** — 攻击者窃取单一口令即可获得系统全部或部分访问权限",
+          "gb_article": "GB/T 22239-2019 三级要求：应采用两种或两种以上组合的鉴别技术"
+        },
+        {
+          "id": "P0-2",
+          "risk_pattern": "权限体系系统性缺失",
+          "trigger": "三权分离+安全标记+SELinux在服务器×4+数据库×2+应用系统×6中全部不符合",
+          "risk_level": "P0",
+          "identified_risk": "**管理员权限过大，无制约机制** — 系统管理员一人可完成所有操作",
+          "gb_article": "GB/T 22239-2019 三级要求：应授予不同用户不同权限，实现管理/审计/操作三权分离"
+        },
+        {
+          "id": "P0-3",
+          "risk_pattern": "数据完整性全系统无保护",
+          "trigger": "鉴别数据/配置数据/业务数据的存储完整性校验在全部系统中为不符合",
+          "risk_level": "P0",
+          "identified_risk": "**存储数据完整性无保护** — 数据库被篡改后无法检测",
+          "gb_article": "GB/T 22239-2019 三级要求：应采用密码技术保证重要数据在存储过程中的完整性"
+        },
+        {
+          "id": "P0-4",
+          "risk_pattern": "灾备体系致命缺陷",
+          "trigger": "无异地备份 + 无恢复测试（符合率=0%）",
+          "risk_level": "P0",
+          "identified_risk": "**无异地灾备 + 从未做恢复测试** — 本地灾难将导致数据完全丢失；备份可用性从未验证",
+          "gb_article": "GB/T 22239-2019 三级要求：应提供异地实时备份功能"
+        },
+        {
+          "id": "P0-5",
+          "risk_pattern": "外包交付流程全缺失",
+          "trigger": "无恶意代码检测+无源码审查+无验收测试+无上线安全测试（4项全部不符合）",
+          "risk_level": "P0",
+          "identified_risk": "**外包开发无安全审查** — 交付物可能含恶意代码或后门，未经安全测试直接上线",
+          "gb_article": "GB/T 22239-2019 三级要求：应保证开发单位提供软件源代码并进行审查"
+        }
+      ]
+    },
+
+    "remediation_priority": {
+      "description": "整改优先级排序 — 基于修复难易度和影响范围",
+      "classification_criteria": {
+        "tier_1_immediate": "技术配置即可修复，1-2周内完成",
+        "tier_2_medium": "需一定投入和规划，1-3个月完成",
+        "tier_3_long": "需采购产品或建设制度，3-6个月完成"
+      },
+      "examples": [
+        {
+          "tier": 1,
+          "item": "配置口令复杂度策略",
+          "scope": "服务器×4 + 数据库×2",
+          "effort": "每个服务器1小时",
+          "specific_commands": "服务器: /etc/pam.d/system-auth 添加 password requisite pam_pwquality.so minlen=8; 数据库: INSTALL PLUGIN validate_password; SET GLOBAL validate_password_policy=MEDIUM"
+        },
+        {
+          "tier": 1,
+          "item": "启用登录失败锁定",
+          "scope": "服务器×4 + 数据库×2",
+          "effort": "每个服务器30分钟",
+          "specific_commands": "服务器: auth required pam_faillock.so deny=5 unlock_time=900; 数据库: INSTALL PLUGIN CONNECTION_CONTROL; SET GLOBAL connection_control_failed_connections_threshold=5"
+        },
+        {
+          "tier": 2,
+          "item": "部署双因素认证",
+          "scope": "服务器+数据库+应用系统",
+          "effort": "2-4周（取决于系统数量）",
+          "options": ["RADIUS+OTP", "Google Authenticator PAM模块", "硬件Token"],
+          "note": "至少先覆盖关键系统：SSH通道+数据库控制台+业务管理后台"
+        },
+        {
+          "tier": 2,
+          "item": "实现三权分离",
+          "scope": "服务器×4 + 数据库×2 + 应用系统×6",
+          "effort": "1-2周",
+          "specific_commands": "创建安全管理员（secadmin）和审计管理员（audadmin）独立系统账户，配置sudo规则"
+        },
+        {
+          "tier": 3,
+          "item": "采购WAF",
+          "scope": "安全区域边界",
+          "effort": "2-3周（选型+采购+部署+配置）",
+          "note": "解决访问控制e（无应用协议级过滤）",
+          "options": ["云平台WAF（推荐）", "独立WAF设备", "开源WAF（ModSecurity）"]
+        },
+        {
+          "tier": 3,
+          "item": "可信验证实现",
+          "scope": "安全通信网络+区域边界+计算环境",
+          "effort": "2-3个月",
+          "options": ["TPM 2.0芯片", "可信固件", "可信度量代理"]
+        }
+      ]
+    },
+
+    "report_writing": {
+      "description": "测评报告总结写法 — 训练模型输出格式规范的报告",
+      "template": {
+        "system_name": "xx系统",
+        "security_level": "第三级",
+        "assessment_conclusion": "基本符合",
+        "key_findings": [
+          "身份认证体系薄弱：无双因素、无口令复杂度策略、无登录失败锁定",
+          "访问控制体系不完善：无三权分离、无应用层WAF、SELinux关闭",
+          "数据安全缺失：存储完整性全系统无保护、无异地备份、无恢复测试",
+          "开发交付流程全缺失：外包开发无恶意代码检测、无源码审查、无安全测试",
+          "安全运维制度未落地：无巡检报告、无配置库、无服务商评审"
+        ],
+        "remediation_summary": "建议分三阶段整改：1-2周完成口令策略+锁定策略+恢复测试等快速修复；1-3个月部署双因素+三权分离+异地备份；3-6个月采购WAF+可信验证+商密VPN",
+        "risk_trend": "上轮得分71.74，42项问题中85.7%仍存在，说明整改执行力严重不足。建议将整改验收作为下次测评的前置条件。"
+      }
+    }
+  },
+
+  "data_quality_notes": {
+    "date_of_extraction": "2026-07-03",
+    "source_document": "报告2.docx (10,612行, 9.8MB)",
+    "extraction_method": "逐行读取 + 人工验证交叉对比",
+    "known_issues": [
+      "部分D表测评项与C表计数之间的对应关系可能受docx表格排版影响（合并单元格导致读取偏移）",
+      "应用服务器_41的访问控制项C表显示'部分符合1'，但D表逐项阅读未发现明确的部分符合项记录——需二次确认",
+      "历史整改记录B表中部分编号顺序与D表的对应关系为近似匹配（非精确行号对应）",
+      "root远程登录项（B-8）在D表逐行读取中未明确找到对应项"
+    ],
+    "audit_trail": "完整A/B/C/D四层交叉验证见 /Users/lingfeng/Desktop/AI 文件夹/codex/附录D-综合分析报告.md，包括：\n- A↔D资产清单对照\n- B↔D 42项逐条比对表\n- C↔D各层抽查5次以上"
+  }
+}
